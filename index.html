@@ -30,7 +30,7 @@
             height: auto;
             border-radius: 10px;
         }
-.stars {
+        .stars {
     direction: rtl;
     unicode-bidi: bidi-override;
     display: flex;
@@ -51,27 +51,24 @@
         transform: translateY(0);
     }
 }
-        .stars input {
-            display: none;
-        }
-        .stars label {
-            font-size: 30px;
-            color: gray;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .stars label:hover,
-        .stars label:hover ~ label,
-        .stars input:checked ~ label {
-            color: gold;
-            transform: scale(1.2);
-        }
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+
+.stars input {
+    display: none;
+}
+.stars label {
+    font-size: 30px;
+    color: gray;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+.stars label:hover,
+.stars label:hover ~ label {
+    color: gold;
+    transform: scale(1.3);
+}
+.stars input:checked ~ label {
+    color: gold;
+}
         textarea, input {
             width: 100%;
             margin-top: 10px;
@@ -106,58 +103,181 @@
             margin-top: 10px;
             position: relative;
         }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            display: none;
+        }
+        #admin-panel {
+            display: none;
+        }
+        .clear-all-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            background: red;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .clear-all-btn:hover {
+            background: darkred;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
+    <!-- Панель администратора -->
+    <div class="container" id="admin-panel">
+        <h2>Вход администратора</h2>
+        <input type="text" id="admin-login" placeholder="Логин">
+        <input type="password" id="admin-password" placeholder="Пароль">
+        <button onclick="adminLogin()">Войти</button>
+    </div>
+    
+    <!-- Основная форма отзыва -->
     <div class="container">
-        <h2>🚘 Оставьте ваш отзыв 🚘</h2>
+        <h2>Оставьте ваш отзыв</h2>
         
         <div class="photo">
-            <img src="photo1.jpg" alt="Аппарат для промывки печек авто">
-            <p>🔥 RADIATOR 30000 - 3000 отзывов 🔥</p>
+            <img src="photo1.jpg" alt="Описание изображения">
+            <p>🔥 RADIATOR 30000 🔥</p>
         </div>
         
         <input type="text" id="name" placeholder="Введите ваше имя">
         <div class="stars">
-            <input type="radio" name="rating" id="star5" value="5"><label for="star5">⭐</label>
-            <input type="radio" name="rating" id="star4" value="4"><label for="star4">⭐</label>
-            <input type="radio" name="rating" id="star3" value="3"><label for="star3">⭐</label>
-            <input type="radio" name="rating" id="star2" value="2"><label for="star2">⭐</label>
-            <input type="radio" name="rating" id="star1" value="1"><label for="star1">⭐</label>
+            <input type="radio" name="rating" id="star5" value="5"><label for="star5">★</label>
+            <input type="radio" name="rating" id="star4" value="4"><label for="star4">★</label>
+            <input type="radio" name="rating" id="star3" value="3"><label for="star3">★</label>
+            <input type="radio" name="rating" id="star2" value="2"><label for="star2">★</label>
+            <input type="radio" name="rating" id="star1" value="1"><label for="star1">★</label>
         </div>
-        <textarea id="comment" placeholder="Напишите ваш отзыв... 🚗"></textarea>
-        <button onclick="addReview()">📩 Отправить</button>
+        <textarea id="comment" placeholder="Напишите ваш отзыв...🚗"></textarea>
+        <button onclick="addReview()">📩Отправить</button>
     </div>
     
-    <div class="container reviews" id="reviews">
-        <h2>Отзывы о RADIATOR3000</h2>
-    </div>
+    <div class="container reviews" id="reviews"></div>
 
     <script>
+        let isAdmin = false;
+        const ADMIN_CREDENTIALS = { login: "admin", password: "1234" };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadReviews();
+            if (window.location.search.includes("admin")) {
+                document.getElementById("admin-panel").style.display = "block";
+            }
+        });
+
+        function adminLogin() {
+            let login = document.getElementById("admin-login").value;
+            let password = document.getElementById("admin-password").value;
+            if (login === ADMIN_CREDENTIALS.login && password === ADMIN_CREDENTIALS.password) {
+                isAdmin = true;
+                alert("Вы вошли как администратор!");
+                document.querySelectorAll(".delete-btn").forEach(btn => btn.style.display = "block");
+                document.querySelectorAll(".clear-all-btn").forEach(btn => btn.style.display = "block");
+                document.getElementById("admin-panel").style.display = "none"; // Скрыть панель входа
+            } else {
+                alert("Неверные данные");
+            }
+        }
+
         function addReview() {
             let name = document.getElementById("name").value;
             let comment = document.getElementById("comment").value;
             let rating = document.querySelector(".stars input:checked");
-            
-            if (!name || !comment || !rating) {
-                alert("🚦 Пожалуйста, введите имя, выберите рейтинг и напишите отзыв! 🚦");
+            let userReviews = JSON.parse(localStorage.getItem("reviews")) || [];
+            const userKey = 'user_' + window.location.hostname; // Уникальный ключ для компьютера
+
+            // Проверка, если пользователь уже оставил отзыв с этого устройства
+            if (!isAdmin && localStorage.getItem(userKey)) {
+                alert("🚦Вы уже оставили отзыв с этого устройства!🚦");
                 return;
             }
-            
+
+            if (!name || !comment || !rating) {
+                alert(🚦"Пожалуйста, введите имя, выберите рейтинг и напишите отзыв!🚦");
+                return;
+            }
+
             let review = { id: Date.now(), name, rating: rating.value, comment, date: new Date().toLocaleString() };
-            let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
-            reviews.unshift(review);
-            localStorage.setItem("reviews", JSON.stringify(reviews));
-            
+            userReviews.unshift(review);
+            localStorage.setItem("reviews", JSON.stringify(userReviews));
+
+            // Запоминаем, что этот пользователь уже оставил отзыв
+            if (!isAdmin) {
+                localStorage.setItem(userKey, 'true');
+            }
+
             displayReview(review);
+        }
+
+        function loadReviews() {
+            let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+            reviews.forEach(displayReview);
         }
 
         function displayReview(review) {
             let reviewBox = document.createElement("div");
             reviewBox.classList.add("review");
-            reviewBox.innerHTML = `🚗 <strong>${review.name} - Оценка: ${review.rating} ⭐</strong><p>${review.comment}</p><small>${review.date}</small>`;
+            reviewBox.innerHTML = 🚗`<strong>${review.name} - Оценка: ${review.rating} ★</strong><p>${review.comment}</p><small>${review.date}</small>`;
+            
+            // Добавляем кнопку для удаления отзыва
+            let deleteBtn = document.createElement("button");
+            deleteBtn.classList.add("delete-btn");
+            deleteBtn.textContent = "Удалить";
+            deleteBtn.onclick = function() { deleteReview(review.id); };
+            reviewBox.appendChild(deleteBtn);
+
             document.getElementById("reviews").prepend(reviewBox);
+
+            // Показываем кнопку удаления только для администраторов
+            if (isAdmin) {
+                deleteBtn.style.display = "inline-block";
+            }
         }
+
+        function deleteReview(reviewId) {
+            if (!isAdmin) {
+                alert("Только администратор может удалять отзывы!");
+                return;
+            }
+            let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+            reviews = reviews.filter(review => review.id !== reviewId); // Удаляем только отзыв с данным id
+            localStorage.setItem("reviews", JSON.stringify(reviews));
+            document.getElementById("reviews").innerHTML = "";
+            loadReviews();
+        }
+
+        // Очистка всех отзывов
+        function clearAllReviews() {
+            if (!isAdmin) {
+                alert("Только администратор может очищать все отзывы!🚦");
+                return;
+            }
+            let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+            reviews = reviews.filter(review => review.name !== 'admin'); // Удаляем только отзывы пользователей, не администраторов
+            localStorage.setItem("reviews", JSON.stringify(reviews));
+            document.getElementById("reviews").innerHTML = "";
+            loadReviews();
+            alert("Все отзывы пользователей были удалены.");
+        }
+
+        // Кнопка для очистки всех отзывов
+        document.querySelector('.clear-all-btn').addEventListener('click', clearAllReviews);
     </script>
+
+    <!-- Кнопка очистки всех отзывов, доступна только администратору -->
+    <button class="clear-all-btn" style="display:none;">Очистить все отзывы</button>
 </body>
 </html>
