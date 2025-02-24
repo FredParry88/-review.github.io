@@ -30,16 +30,27 @@
             height: auto;
             border-radius: 10px;
         }
-        .stars {
-            direction: rtl;
-            unicode-bidi: bidi-override;
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: fadeIn 0.5s forwards;
-        }
+.stars {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInStars 0.8s ease-in-out forwards;
+}
+
+@keyframes fadeInStars {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
         .stars input {
             display: none;
         }
@@ -103,7 +114,7 @@
         
         <div class="photo">
             <img src="photo1.jpg" alt="Аппарат для промывки печек авто">
-            <p>🔥 RADIATOR 30000 🔥</p>
+            <p>🔥 RADIATOR 30000 - 3000 отзывов 🔥</p>
         </div>
         
         <input type="text" id="name" placeholder="Введите ваше имя">
