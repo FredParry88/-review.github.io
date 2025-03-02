@@ -93,7 +93,20 @@
         const ADMIN_CREDENTIALS = { login: "admin", password: "1234" };
         const userKey = 'user_' + window.location.hostname;
 
-        document.addEventListener("DOMContentLoaded", loadReviews);
+        document.addEventListener("DOMContentLoaded", () => {
+            checkAdminCredentials();
+            loadReviews();
+        });
+
+        function checkAdminCredentials() {
+            const login = prompt("Введите логин администратора");
+            const password = prompt("Введите пароль администратора");
+
+            if (login === ADMIN_CREDENTIALS.login && password === ADMIN_CREDENTIALS.password) {
+                isAdmin = true;
+                document.querySelector(".clear-all-btn").style.display = "block"; // Show clear all button for admin
+            }
+        }
 
         function addReview() {
             if (!isAdmin && localStorage.getItem(userKey)) {
@@ -136,6 +149,20 @@
             }
             reviewBox.appendChild(deleteBtn);
             document.getElementById("reviews").appendChild(reviewBox);
+        }
+
+        function deleteReview(id) {
+            let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
+            reviews = reviews.filter(review => review.id !== id);
+            localStorage.setItem("reviews", JSON.stringify(reviews));
+            loadReviews();
+        }
+
+        function clearAllReviews() {
+            if (confirm("Вы уверены, что хотите удалить все отзывы?")) {
+                localStorage.removeItem("reviews");
+                loadReviews();
+            }
         }
     </script>
 </body>
